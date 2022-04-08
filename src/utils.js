@@ -7,7 +7,7 @@ import * as React from 'react'
  * @param {{serialize: Function, deserialize: Function}} options The serialize and deserialize functions to use (defaults to JSON.stringify and JSON.parse respectively)
  */
 
-function useLocalStorageState(
+function useLocalStorageState (
   key,
   defaultValue = '',
   {serialize = JSON.stringify, deserialize = JSON.parse} = {},

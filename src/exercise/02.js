@@ -1,20 +1,45 @@
 // useEffect: persistent state
 // http://localhost:3000/isolated/exercise/02.js
 
+// Solucion con todos los credits
+
 import * as React from 'react'
 
-const useLocalStorageState = (key, defaultValue = '') => {
+//Custom hook
+const useLocalStorageState = (
+  key,
+  defaultValue = '',
+  {serialize = JSON.stringify, deserialize = JSON.parse} = {},
+) => {
   const [state, setState] = React.useState(
-    () => window.localStorage.getItem(key) ?? defaultValue,
+    //El calculo del valor inicial de useState lo metemos en funcion flecha para que no haga
+    // la busqueda al localstorrage cada render (lazy initialization)
+    () => {
+      const valueInLocalStorage = window.localStorage.getItem(key)
+      if (valueInLocalStorage) {
+        return deserialize(valueInLocalStorage)
+      }
+      //Si es una función (calculo pesado) lo devolvemos como funcion sino defaultvalue
+      return typeof defaultValue === 'function' ? defaultValue() : defaultValue
+    },
   )
+
+  const prevKeyRef = React.useRef(key)
+
   React.useEffect(() => {
-    window.localStorage.setItem(key, state)
-  }, [key, state])
+    const prevKey = prevKeyRef.current
+    if (prevKey !== key) {
+      window.localStorage.removeItem(prevKey)
+    }
+    prevKeyRef.current = key
+    window.localStorage.setItem(key, serialize(state))
+  }, [key, serialize, state])
 
   return [state, setState]
 }
 
 function Greeting ({initialName = ''}) {
+  //Usamos el custom hook
   const [name, setName] = useLocalStorageState('name', initialName)
 
   function handleChange (event) {
